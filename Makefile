@@ -7,10 +7,10 @@ all: thread_sync.o $(PROGRAM)
 thread_sync.o:
 	$(CC) $(CFLAGS) thread_sync.c -c
 
-$(PROGRAM):
-	@echo "not yet implemented the main()."
+$(PROGRAM): thread_sync.o
+	$(CC) $(CFLAGS) test_pause_and_wakeup.c $^ -o $@
 
 .PHONY:clean
 
 clean: thread_sync.o
-	rm -rf $^
+	rm -rf $^ $(PROGRAM)

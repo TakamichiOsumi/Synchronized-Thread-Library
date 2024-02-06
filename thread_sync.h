@@ -18,22 +18,25 @@
 	SET_BIT(n, BIT_F);			\
     }
 
-#define THREAD_RUNNING (1 << 0)
-#define THREAD_MARKED_FOR_PAUSE (1 << 1)
-#define THREAD_PAUSED (1 << 2)
-#define THREAD_BLOCKED (1 << 3)
+#define THREAD_CREATED (1 << 0)
+#define THREAD_RUNNING (1 << 1)
+#define THREAD_MARKED_FOR_PAUSE (1 << 2)
+#define THREAD_PAUSED (1 << 3)
+#define THREAD_BLOCKED (1 << 4)
 
 typedef struct synched_thread {
 
+    uintptr_t thread_id;
     char name[32];
-    bool thread_created;
-    pthread_t thread;
+    pthread_t *thread;
     pthread_attr_t attributes;
+
+    bool thread_launched;
 
     /* Indicate thread status */
     uint32_t flags;
 
-    /* Invoked before pausing the thread */
+    /* Invoked before the pausing */
     void *(*thread_pause_fn)(void *);
     void *pause_arg;
 
@@ -41,31 +44,42 @@ typedef struct synched_thread {
     void *(*thread_fn)(void *);
     void *arg;
 
-    /* Protect any update of the struct member */
+    /* Invoked after the resumption */
+    void *(*thread_resume_fn)(void *);
+    void *resume_arg;
+
+    /* Protect any update of this struct member */
     pthread_mutex_t state_mutex;
     pthread_cond_t state_cv;
 
 } synched_thread;
 
-
-synched_thread *synched_thread_create(synched_thread *sthread, char *name);
-
-void synched_thread_set_thread_attribute(synched_thread *sthread, bool joinable);
-void synched_thread_set_pause_fn(synched_thread *sthread,
-				 void *(*thread_pause_fn)(void *),
-				 void *pause_arg);
-
-void synched_thread_run(synched_thread *sthread, void *(*thread_fn)(void *), void *arg);
-/* Mark the flag to pause only */
-void synched_thread_pause(synched_thread *sthread);
-void synched_thread_test_and_pause(synched_thread *sthread);
-void synched_thread_resume(synched_thread *sthread);
+synched_thread *synched_thread_create(synched_thread *sync_thread,
+				      uintptr_t thread_id, char *name, pthread_t *handler);
+void synched_thread_set_thread_attribute(synched_thread *sync_thread, bool joinable);
+void synched_thread_run(synched_thread *sthread,
+			void *(*thread_fn)(void *), void *arg);
 /*
- * Allow user to register a new function the thread will invoke after the pause.
- * It's possible that after the wake up, the involvement of the application changes
- * drastically.
+ * Only mark the flag to pause.
+ *
+ * The pause operation will be done in the next pause point where
+ * the thread doesn't create any invariants and can wait gracefully.
  */
-void synched_thread_set_pause_fn(synched_thread *sthread,
+void synched_thread_pause(synched_thread *sync_thread);
+void synched_thread_reached_pause_point(synched_thread *sync_thread);
+void synched_thread_wake_up(synched_thread *sync_thread);
+// void synched_thread_resume(synched_thread *sthread);
+
+/*
+ * Allow user to register functions the thread will invoke before and after the pause.
+ *
+ * It's possible that before the pause, the thread wants to process something
+ * and after the wake up, the involvement of the application changes a lot.
+ */
+void synched_thread_set_pause_fn(synched_thread *sync_thread,
 				 void *(*thread_pause_fn)(void *),
 				 void *pause_arg);
+void synched_thread_set_resume_fn(synched_thread *sync_thread,
+				  void *(*thread_resume_fn)(void *),
+				  void *resume_arg);
 #endif
