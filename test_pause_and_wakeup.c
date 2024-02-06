@@ -91,6 +91,9 @@ main(int argc, char **argv){
     for (i = 0; i < MAX_THREADS_NUM; i++){
 	snprintf(thread_name, sizeof(thread_name), "%s%d", "thread", i);
 	synched_thread_create(&tsd.sync_handlers[i], i, thread_name, &handlers[i]);
+	synched_thread_set_thread_attribute(&tsd.sync_handlers[i], true);
+	synched_thread_set_pause_fn(&tsd.sync_handlers[i], NULL, NULL);
+	synched_thread_set_resume_fn(&tsd.sync_handlers[i], NULL, NULL);
 	synched_thread_run(&tsd.sync_handlers[i],
 			   i == T1 ? thread_T1_cb : thread_T2_cb, (void *) &tsd);
     }

@@ -59,6 +59,14 @@ synched_thread_set_pause_fn(synched_thread *sync_thread,
 }
 
 void
+synched_thread_set_resume_fn(synched_thread *sync_thread,
+			    void *(*thread_resume_fn)(void *),
+			    void *resume_arg){
+    sync_thread->thread_resume_fn = thread_resume_fn;
+    sync_thread->pause_arg = resume_arg;
+}
+
+void
 synched_thread_run(synched_thread *sync_thread,
 		   void *(*thread_fn)(void *), void *arg){
 

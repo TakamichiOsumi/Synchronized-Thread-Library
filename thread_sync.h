@@ -66,12 +66,13 @@ void synched_thread_run(synched_thread *sthread,
  * the thread doesn't create any invariants and can wait gracefully.
  */
 void synched_thread_pause(synched_thread *sync_thread);
+
+/* If thread is set to THREAD_MARKED_FOR_PAUSE state, start to wait */
 void synched_thread_reached_pause_point(synched_thread *sync_thread);
 void synched_thread_wake_up(synched_thread *sync_thread);
-// void synched_thread_resume(synched_thread *sthread);
 
 /*
- * Allow user to register functions the thread will invoke before and after the pause.
+ * Allow user to register functions synched thread will invoke before and after the pause.
  *
  * It's possible that before the pause, the thread wants to process something
  * and after the wake up, the involvement of the application changes a lot.
@@ -82,4 +83,5 @@ void synched_thread_set_pause_fn(synched_thread *sync_thread,
 void synched_thread_set_resume_fn(synched_thread *sync_thread,
 				  void *(*thread_resume_fn)(void *),
 				  void *resume_arg);
+
 #endif
