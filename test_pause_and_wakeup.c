@@ -28,6 +28,7 @@ thread_T1_cb(void *arg){
     synched_thread *thread_T2 = &shared->sync_handlers[T2];
 
     synched_thread_pause(thread_T2);
+
     make_T2_paused = true;
 
     printf("T1 has set the pause flag of T2. Let T1 wait some time...\n");
@@ -84,6 +85,7 @@ main(int argc, char **argv){
     int i;
 
     tsd.max_threads_num = MAX_THREADS_NUM;
+
     tsd.sync_handlers = (synched_thread *) xmalloc(sizeof(synched_thread) * MAX_THREADS_NUM);
 
     for (i = 0; i < MAX_THREADS_NUM; i++){
@@ -93,7 +95,8 @@ main(int argc, char **argv){
 			   i == T1 ? thread_T1_cb : thread_T2_cb, (void *) &tsd);
     }
 
-    pthread_exit(0);
+    for (i = 0; i < MAX_THREADS_NUM; i++)
+	pthread_join(*(tsd.sync_handlers[i].thread), NULL);
 
     return 0;
 }
