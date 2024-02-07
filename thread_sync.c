@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pthread.h>
 #include "thread_sync.h"
+#include "Glued-Doubly-Linked-List/glthreads.h"
 
 synched_thread *
 synched_thread_create(synched_thread *sync_thread,
@@ -128,4 +129,57 @@ synched_thread_reached_pause_point(synched_thread *sync_thread){
 
     }
     pthread_mutex_unlock(&sync_thread->state_mutex);
+}
+
+static int
+synched_thread_key_match_cb(void *sync_thread, void *thread_id){
+    return 0;
+}
+
+static int
+synched_thread_compare_cb(void *sync_thread1, void *sync_thread2){
+    return 0;
+}
+
+static void
+synched_thread_free_cb(void **lists, void *sync_thread){
+    return;
+}
+
+synched_thread_pool *
+synched_thread_pool_init(){
+    synched_thread_pool *sth_pool;
+
+    if ((sth_pool = (synched_thread_pool *) malloc(sizeof(synched_thread_pool))) == NULL){
+	perror("malloc");
+	exit(-1);
+    }
+
+    pthread_mutex_init(&sth_pool->mutex, NULL);
+    sth_pool->pool_head = glthread_create_list(synched_thread_key_match_cb,
+					       synched_thread_compare_cb,
+					       synched_thread_free_cb,
+					       offsetof(synched_thread, glue));
+    return sth_pool;
+}
+
+void
+synched_thread_insert_new_thread(synched_thread_pool *sth_pool,
+				 glthread_node *node){
+    if (!sth_pool || !node)
+	return;
+
+    pthread_mutex_lock(&sth_pool->mutex);
+    pthread_mutex_unlock(&sth_pool->mutex);
+}
+
+synched_thread *
+synched_thread_get_thread(synched_thread_pool *sth_pool){
+    return NULL;
+}
+
+void
+synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
+			       void *(*thread_fn)(void *),
+			       void *arg){
 }

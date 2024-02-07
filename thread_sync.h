@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <pthread.h>
+#include "Glued-Doubly-Linked-List/glthreads.h"
 
 #define SET_BIT(n, BIT_F)			\
     (n |= BIT_F)
@@ -52,7 +53,15 @@ typedef struct synched_thread {
     pthread_mutex_t state_mutex;
     pthread_cond_t state_cv;
 
+    glthread_node glue;
+
 } synched_thread;
+
+/* Thread pool definition */
+typedef struct synched_thread_pool {
+    gldll *pool_head;
+    pthread_mutex_t mutex;
+} synched_thread_pool;
 
 synched_thread *synched_thread_create(synched_thread *sync_thread,
 				      uintptr_t thread_id, char *name, pthread_t *handler);
@@ -83,5 +92,14 @@ void synched_thread_set_pause_fn(synched_thread *sync_thread,
 void synched_thread_set_resume_fn(synched_thread *sync_thread,
 				  void *(*thread_resume_fn)(void *),
 				  void *resume_arg);
+
+/* Support thread pool functionality */
+synched_thread_pool *synched_thread_pool_init();
+void synched_thread_insert_new_thread(synched_thread_pool *sth_pool,
+				      glthread_node *node);
+synched_thread *synched_thread_get_thread(synched_thread_pool *sth_pool);
+void synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
+				    void *(*thread_fn)(void *),
+				    void *arg);
 
 #endif
