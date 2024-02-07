@@ -18,7 +18,6 @@ typedef struct thread_shared_data {
 
 #define MAX_THREADS_NUM 2
 #define THREAD_NAME_LEN 256
-
 static bool make_T2_paused = false;
 
 /* T1 will make T2 pause and resume */
@@ -65,6 +64,31 @@ thread_T2_cb(void *arg){
 }
 
 static void *
+pause_fn_cb(void *arg){
+    synched_thread *thread = (synched_thread *) arg;
+
+    assert(pthread_self() == *(thread->thread));
+    assert(thread->thread_id == T2);
+
+    printf("\t%lu %s\n", thread->thread_id, __FUNCTION__);
+
+    return NULL;
+}
+
+static void *
+resume_fn_cb(void *arg){
+    synched_thread *thread = (synched_thread *) arg;
+
+    assert(pthread_self() == *(thread->thread));
+    assert(thread->thread_id == T2);
+
+    printf("\t%lu %s\n", thread->thread_id, __FUNCTION__);
+
+    return NULL;
+}
+
+
+static void *
 xmalloc(size_t size){
     void *p;
 
@@ -92,8 +116,12 @@ main(int argc, char **argv){
 	snprintf(thread_name, sizeof(thread_name), "%s%d", "thread", i);
 	synched_thread_create(&tsd.sync_handlers[i], i, thread_name, &handlers[i]);
 	synched_thread_set_thread_attribute(&tsd.sync_handlers[i], true);
-	synched_thread_set_pause_fn(&tsd.sync_handlers[i], NULL, NULL);
-	synched_thread_set_resume_fn(&tsd.sync_handlers[i], NULL, NULL);
+	synched_thread_set_pause_fn(&tsd.sync_handlers[i],
+				    i == T2 ? pause_fn_cb : NULL,
+				    i == T2 ? &tsd.sync_handlers[i] : NULL);
+	synched_thread_set_resume_fn(&tsd.sync_handlers[i],
+				     i == T2 ? resume_fn_cb : NULL,
+				     i == T2 ? &tsd.sync_handlers[i] : NULL);
 	synched_thread_run(&tsd.sync_handlers[i],
 			   i == T1 ? thread_T1_cb : thread_T2_cb, (void *) &tsd);
     }
