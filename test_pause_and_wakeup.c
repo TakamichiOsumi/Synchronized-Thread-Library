@@ -68,9 +68,9 @@ thread_T2_cb(void *arg){
     assert(IS_BIT_SET(thread_T2->flags,
 		      THREAD_MARKED_FOR_PAUSE));
 
-    printf("T2 will enter the pause point\n");
+    printf("\tT2 will enter the pause point\n");
     synched_thread_reached_pause_point(thread_T2);
-    printf("T2 has left the pause point\n");
+    printf("\tT2 has left the pause point\n");
 
     t1 = time(NULL);
 
