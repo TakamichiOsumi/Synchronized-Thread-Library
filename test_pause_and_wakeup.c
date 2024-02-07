@@ -9,6 +9,19 @@
 
 typedef enum { T1 = 0, T2 = 1 } thread_id;
 
+static char *
+get_thread_id_str(thread_id id){
+    switch(id){
+	case T1:
+	    return "T1";
+	case T2:
+	    return "T2";
+	default:
+	    assert(0);
+	    return NULL;
+    }
+}
+
 typedef struct thread_shared_data {
     /* The size of array */
     uintptr_t max_threads_num;
@@ -52,6 +65,9 @@ thread_T2_cb(void *arg){
 
     t0 = time(NULL);
 
+    assert(IS_BIT_SET(thread_T2->flags,
+		      THREAD_MARKED_FOR_PAUSE));
+
     printf("T2 will enter the pause point\n");
     synched_thread_reached_pause_point(thread_T2);
     printf("T2 has left the pause point\n");
@@ -70,7 +86,8 @@ pause_fn_cb(void *arg){
     assert(pthread_self() == *(thread->thread));
     assert(thread->thread_id == T2);
 
-    printf("\t%lu %s\n", thread->thread_id, __FUNCTION__);
+    printf("\t%s %s\n",
+	   get_thread_id_str(thread->thread_id), __FUNCTION__);
 
     return NULL;
 }
@@ -82,7 +99,8 @@ resume_fn_cb(void *arg){
     assert(pthread_self() == *(thread->thread));
     assert(thread->thread_id == T2);
 
-    printf("\t%lu %s\n", thread->thread_id, __FUNCTION__);
+    printf("\t%s %s\n",
+	   get_thread_id_str(thread->thread_id), __FUNCTION__);
 
     return NULL;
 }

@@ -71,6 +71,7 @@ synched_thread_run(synched_thread *sync_thread,
 		   void *(*thread_fn)(void *), void *arg){
 
     assert(IS_BIT_SET(sync_thread->flags, THREAD_CREATED) == 1);
+
     sync_thread->thread_fn = thread_fn;
     sync_thread->arg = arg;
     sync_thread->thread_launched = true;
