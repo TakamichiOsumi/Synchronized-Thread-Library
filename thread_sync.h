@@ -27,11 +27,11 @@
 
 typedef struct synched_thread {
 
+    /* Basic information about the thread */
     uintptr_t thread_id;
     char name[32];
     pthread_t *thread;
     pthread_attr_t attributes;
-
     bool thread_launched;
 
     /* Indicate thread status */
@@ -97,7 +97,7 @@ void synched_thread_set_resume_fn(synched_thread *sync_thread,
 synched_thread_pool *synched_thread_pool_init();
 void synched_thread_insert_new_thread(synched_thread_pool *sth_pool,
 				      glthread_node *node);
-synched_thread *synched_thread_get_thread(synched_thread_pool *sth_pool);
+glthread_node *synched_thread_get_thread(synched_thread_pool *sth_pool);
 void synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
 				    void *(*thread_fn)(void *),
 				    void *arg);

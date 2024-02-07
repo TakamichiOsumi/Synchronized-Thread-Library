@@ -166,20 +166,47 @@ synched_thread_pool_init(){
 void
 synched_thread_insert_new_thread(synched_thread_pool *sth_pool,
 				 glthread_node *node){
+    synched_thread *sync_thread;
     if (!sth_pool || !node)
 	return;
 
     pthread_mutex_lock(&sth_pool->mutex);
+    sync_thread = (synched_thread *) glthread_get_app_structure(sth_pool->pool_head,
+								node);
+    assert(IS_BIT_SET(sync_thread->flags, THREAD_CREATED) == 1);
+    assert(sync_thread->thread_fn == NULL);
+
+    glthread_insert_entry(sth_pool->pool_head, node);
     pthread_mutex_unlock(&sth_pool->mutex);
 }
 
-synched_thread *
+glthread_node *
 synched_thread_get_thread(synched_thread_pool *sth_pool){
-    return NULL;
+    glthread_node *node;
+
+    pthread_mutex_lock(&sth_pool->mutex);
+    /*
+     * Thread pool must ensure it has enough threads allocation to serve
+     * the all application requests. If this is violated, raise an assertion
+     * failures.
+     */
+    assert((node = glthread_get_first_entry(sth_pool->pool_head)) != NULL);
+    pthread_mutex_unlock(&sth_pool->mutex);
+
+    return node;
 }
 
 void
 synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
 			       void *(*thread_fn)(void *),
 			       void *arg){
+    glthread_node *node;
+    synched_thread *sync_thread;
+
+    assert(!sth_pool || !thread_fn);
+
+    node = synched_thread_get_thread(sth_pool);
+    sync_thread = (synched_thread *) glthread_get_app_structure(sth_pool->pool_head,
+								node);
+    synched_thread_run(sync_thread, thread_fn, arg);
 }
