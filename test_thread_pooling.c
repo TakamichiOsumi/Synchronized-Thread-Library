@@ -48,7 +48,6 @@ test_thread_pool_function(void *arg){
 
 int
 main(int argc, char **argv){
-
     synched_thread_pool *thread_pool;
     synched_thread *thread;
     pthread_t handlers[MAX_THREADS_NUM];
@@ -58,16 +57,15 @@ main(int argc, char **argv){
     thread_pool = synched_thread_pool_init(MAX_THREADS_NUM);
 
     for (i = 0; i < MAX_THREADS_NUM; i++){
-
-	/* Create each thread */
+	/* Create standby threads */
 	thread = (synched_thread *) xmalloc(sizeof(synched_thread));
 	snprintf(thread_name_buf, sizeof(thread_name_buf),
-		 "%s%d", "pooled_thread : %d", i);
+		 "%s=%d", "thread", i);
 	synched_thread_gen_empty_instance(thread, i,
 					  thread_name_buf, &handlers[i]);
 	synched_thread_set_thread_attribute(thread, true);
 
-	/* This thread is ready to pool. Make it wait in the background */
+	/* This thread is ready to be pooled. Make it wait in the background */
 	synched_thread_insert_thread_into_pool(thread_pool, thread);
     }
 

@@ -43,24 +43,24 @@ synched_thread_standby_run(void *arg){
     synched_thread *thread = (synched_thread *) arg;
 
     while(1){
-	printf("[%p] Will wait for pthread_cond_signal()...\n",
-	       pthread_self());
+	printf("[%s : %p] Will wait for pthread_cond_signal()...\n",
+	       thread->name, pthread_self());
 
 	pthread_mutex_lock(&thread->state_mutex);
 	pthread_cond_wait(&thread->state_cv,
 			  &thread->state_mutex);
 	pthread_mutex_unlock(&thread->state_mutex);
 
-	printf("[%p] Woke up...\n", pthread_self());
+	printf("[%s : %p] Woke up...\n", thread->name, pthread_self());
 
 	if (thread->deferred_main_fn){
-	    printf("[%p] Will execute the user request main function...\n",
-		   pthread_self());
+	    printf("[%s : %p] Will execute the user request main function...\n",
+		   thread->name, pthread_self());
 	    (thread->deferred_main_fn)(thread->deferred_main_arg);
 	}
 
-	printf("[%p] All works are done. Loop back to the beginning.\n",
-	       pthread_self());
+	printf("[%s : %p] All works are done. Loop back to the beginning.\n",
+	       thread->name, pthread_self());
 
 	/* Reset */
 	thread->deferred_main_fn = NULL;
