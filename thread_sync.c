@@ -8,15 +8,9 @@
 #include "Glued-Doubly-Linked-List/glthreads.h"
 
 synched_thread *
-synched_thread_create(synched_thread *sync_thread,
-		      uintptr_t thread_id, char *name, pthread_t *handler){
-
-    if (!sync_thread){
-	if ((sync_thread = calloc(1, sizeof(synched_thread))) == NULL){
-	    perror("calloc");
-	    exit(-1);
-	}
-    }
+synched_thread_gen_empty_instance(synched_thread *sync_thread,
+				  uintptr_t thread_id, char *name,
+				  pthread_t *handler){
 
     sync_thread->thread_id = thread_id;
     strncpy(sync_thread->name, name, sizeof(sync_thread->name));
@@ -42,6 +36,50 @@ synched_thread_create(synched_thread *sync_thread,
     pthread_mutex_init(&sync_thread->state_mutex, NULL);
 
     return sync_thread;
+}
+
+static void *
+synched_thread_standby_run(void *arg){
+    synched_thread *thread = (synched_thread *) arg;
+
+    while(1){
+	printf("[%p] Will wait for pthread_cond_signal()...\n",
+	       pthread_self());
+
+	pthread_mutex_lock(&thread->state_mutex);
+	pthread_cond_wait(&thread->state_cv,
+			  &thread->state_mutex);
+	pthread_mutex_unlock(&thread->state_mutex);
+
+	printf("[%p] Woke up...\n", pthread_self());
+
+	if (thread->deferred_main_fn){
+	    printf("[%p] Will execute the user request main function...\n",
+		   pthread_self());
+	    (thread->deferred_main_fn)(thread->deferred_main_arg);
+	}
+
+	printf("[%p] All works are done. Loop back to the beginning.\n",
+	       pthread_self());
+
+	/* Reset */
+	thread->deferred_main_fn = NULL;
+	thread->deferred_main_arg = NULL;
+
+	/*
+	 * This thread is already fetched from the thread pool.
+	 *
+	 * Add this thread to the waiting list again for reuse.
+	 */
+	pthread_mutex_lock(&thread->state_mutex);
+	thread->glue.next = NULL;
+	thread->glue.prev = NULL;
+	glthread_insert_entry(thread->thread_pool->glued_list_container,
+			      &thread->glue);
+	pthread_mutex_unlock(&thread->state_mutex);
+    }
+
+    return NULL;
 }
 
 void
@@ -132,10 +170,16 @@ synched_thread_reached_pause_point(synched_thread *sync_thread){
 }
 
 static int
-synched_thread_key_match_cb(void *sync_thread, void *thread_id){
-    return 0;
+synched_thread_key_match_cb(void *thread, void *thread_id){
+    synched_thread *sync_thread = (synched_thread *) thread;
+
+    if (sync_thread->thread_id == (uintptr_t) thread_id)
+	return 0;
+    else
+	return -1;
 }
 
+/* TODO */
 static int
 synched_thread_compare_cb(void *sync_thread1, void *sync_thread2){
     return 0;
@@ -147,37 +191,62 @@ synched_thread_free_cb(void **lists, void *sync_thread){
 }
 
 synched_thread_pool *
-synched_thread_pool_init(){
+synched_thread_pool_init(uintptr_t max_threads_num){
     synched_thread_pool *sth_pool;
 
+    assert(max_threads_num >= 0);
     if ((sth_pool = (synched_thread_pool *) malloc(sizeof(synched_thread_pool))) == NULL){
 	perror("malloc");
 	exit(-1);
     }
 
+    sth_pool->max_threads_num = max_threads_num;
     pthread_mutex_init(&sth_pool->mutex, NULL);
-    sth_pool->pool_head = glthread_create_list(synched_thread_key_match_cb,
-					       synched_thread_compare_cb,
-					       synched_thread_free_cb,
-					       offsetof(synched_thread, glue));
+    sth_pool->glued_list_container = glthread_create_list(synched_thread_key_match_cb,
+							  synched_thread_compare_cb,
+							  synched_thread_free_cb,
+							  offsetof(synched_thread, glue));
     return sth_pool;
 }
 
 void
-synched_thread_insert_new_thread(synched_thread_pool *sth_pool,
-				 glthread_node *node){
-    synched_thread *sync_thread;
-    if (!sth_pool || !node)
-	return;
+synched_thread_insert_thread_into_pool(synched_thread_pool *sth_pool,
+				       synched_thread *thread){
+    assert(sth_pool != NULL);
+    assert(thread != NULL);
 
     pthread_mutex_lock(&sth_pool->mutex);
-    sync_thread = (synched_thread *) glthread_get_app_structure(sth_pool->pool_head,
-								node);
-    assert(IS_BIT_SET(sync_thread->flags, THREAD_CREATED) == 1);
-    assert(sync_thread->thread_fn == NULL);
+    /* Ensure that this thread is just an empty instance of one thread */
+    assert(IS_BIT_SET(thread->flags, THREAD_CREATED) == 1);
+    assert(thread->thread_pause_fn == NULL);
+    assert(thread->pause_arg == NULL);
+    assert(thread->thread_fn == NULL);
+    assert(thread->arg == NULL);
+    assert(thread->thread_resume_fn == NULL);
+    assert(thread->resume_arg == NULL);
+    /* Insert the passed thead to the pool */
+    glthread_insert_entry(sth_pool->glued_list_container,
+			  &thread->glue);
+    /*
+     * Make the thread remember the thread pool address at the same time.
+     * This pointer will be used in synched_thread_standby_run() to add
+     * this thread to the thread pool again.
+     */
+    thread->thread_pool = sth_pool;
 
-    glthread_insert_entry(sth_pool->pool_head, node);
     pthread_mutex_unlock(&sth_pool->mutex);
+
+    /*
+     * Now, ready to execute the thread in the background.
+     *
+     * The third argument is the thread itself, but this data
+     * will get updated in synched_thread_dispatch_thread() so that
+     * it can respond to and process any new user requested functions
+     * as callbacks. At this moment, just ensure that those are null.
+     */
+    assert(thread->deferred_main_fn == NULL);
+    assert(thread->deferred_main_arg == NULL);
+    synched_thread_run(thread, synched_thread_standby_run, thread);
 }
 
 glthread_node *
@@ -185,12 +254,8 @@ synched_thread_get_thread(synched_thread_pool *sth_pool){
     glthread_node *node;
 
     pthread_mutex_lock(&sth_pool->mutex);
-    /*
-     * Thread pool must ensure it has enough threads allocation to serve
-     * the all application requests. If this is violated, raise an assertion
-     * failures.
-     */
-    assert((node = glthread_get_first_entry(sth_pool->pool_head)) != NULL);
+    node = glthread_get_first_entry(sth_pool->glued_list_container);
+    assert(node != NULL);
     pthread_mutex_unlock(&sth_pool->mutex);
 
     return node;
@@ -201,12 +266,15 @@ synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
 			       void *(*thread_fn)(void *),
 			       void *arg){
     glthread_node *node;
-    synched_thread *sync_thread;
-
-    assert(!sth_pool || !thread_fn);
+    synched_thread *thread;
 
     node = synched_thread_get_thread(sth_pool);
-    sync_thread = (synched_thread *) glthread_get_app_structure(sth_pool->pool_head,
+    thread = (synched_thread *) glthread_get_app_structure(sth_pool->glued_list_container,
 								node);
-    synched_thread_run(sync_thread, thread_fn, arg);
+    thread->deferred_main_fn = thread_fn;
+    thread->deferred_main_arg = arg;
+
+    printf("Done with sending a signal to pooled thread\n");
+
+    pthread_cond_signal(&thread->state_cv);
 }

@@ -25,17 +25,26 @@
 #define THREAD_PAUSED (1 << 3)
 #define THREAD_BLOCKED (1 << 4)
 
+#define THREAD_NAME_LEN 64
+struct synched_thread_pool;
+
 typedef struct synched_thread {
 
-    /* Basic information about the thread */
+    /* Basic information about the pthread itself */
     uintptr_t thread_id;
-    char name[32];
+    char name[THREAD_NAME_LEN];
     pthread_t *thread;
     pthread_attr_t attributes;
-    bool thread_launched;
 
-    /* Indicate thread status */
+    /* Indicate the thread status */
+    bool thread_launched;
     uint32_t flags;
+
+    /*
+     * -------------------------------------
+     * Variables to pause and resume threads
+     * -------------------------------------
+     */
 
     /* Invoked before the pausing */
     void *(*thread_pause_fn)(void *);
@@ -49,24 +58,41 @@ typedef struct synched_thread {
     void *(*thread_resume_fn)(void *);
     void *resume_arg;
 
+    /*
+     * -------------------------------------
+     * Variables to pool threads
+     * -------------------------------------
+     */
+    void *(*deferred_main_fn)(void *);
+    void *deferred_main_arg;
+    struct synched_thread_pool *thread_pool;
+
     /* Protect any update of this struct member */
     pthread_mutex_t state_mutex;
     pthread_cond_t state_cv;
 
+    /*
+     * TODO : add zero semaphore
+     */
+
+    /* Glue to be connected to the thread pool */
     glthread_node glue;
 
 } synched_thread;
 
 /* Thread pool definition */
 typedef struct synched_thread_pool {
-    gldll *pool_head;
+    uintptr_t max_threads_num;
+    gldll *glued_list_container;
     pthread_mutex_t mutex;
 } synched_thread_pool;
 
-synched_thread *synched_thread_create(synched_thread *sync_thread,
-				      uintptr_t thread_id, char *name, pthread_t *handler);
-void synched_thread_set_thread_attribute(synched_thread *sync_thread, bool joinable);
-void synched_thread_run(synched_thread *sthread,
+synched_thread *synched_thread_gen_empty_instance(synched_thread *sync_thread,
+						  uintptr_t thread_id, char *name,
+						  pthread_t *handler);
+void synched_thread_set_thread_attribute(synched_thread *sync_thread,
+					 bool joinable);
+void synched_thread_run(synched_thread *sync_thread,
 			void *(*thread_fn)(void *), void *arg);
 /*
  * Only mark the flag to pause.
@@ -94,9 +120,10 @@ void synched_thread_set_resume_fn(synched_thread *sync_thread,
 				  void *resume_arg);
 
 /* Support thread pool functionality */
-synched_thread_pool *synched_thread_pool_init();
-void synched_thread_insert_new_thread(synched_thread_pool *sth_pool,
-				      glthread_node *node);
+synched_thread_pool *synched_thread_pool_init(uintptr_t max_threads_num);
+void synched_thread_insert_thread_into_pool(synched_thread_pool *sth_pool,
+					    synched_thread *thread);
+void synched_thread_pool_thread();
 glthread_node *synched_thread_get_thread(synched_thread_pool *sth_pool);
 void synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
 				    void *(*thread_fn)(void *),
