@@ -6,4 +6,6 @@ Based on pthead library, implement another thread utility library that enables u
 
 2. Thread pooling
 
-Note : Support the combination of those features is one of the TODOs.
+3. Thread barrier (TODO)
+
+Note : Support the combination of those features is also one of the TODOs.
