@@ -7,6 +7,18 @@
 #include "thread_sync.h"
 #include "Glued-Doubly-Linked-List/glthreads.h"
 
+static void *
+synched_thread_malloc(size_t size){
+    void *p;
+
+    if ((p = malloc(size)) == NULL){
+	perror("malloc");
+	exit(-1);
+    }
+
+    return p;
+}
+
 synched_thread *
 synched_thread_gen_empty_instance(synched_thread *sync_thread,
 				  uintptr_t thread_id, char *name,
@@ -179,32 +191,16 @@ synched_thread_key_match_cb(void *thread, void *thread_id){
 	return -1;
 }
 
-/* TODO */
-static int
-synched_thread_compare_cb(void *sync_thread1, void *sync_thread2){
-    return 0;
-}
-
-static void
-synched_thread_free_cb(void **lists, void *sync_thread){
-    return;
-}
-
 synched_thread_pool *
 synched_thread_pool_init(uintptr_t max_threads_num){
     synched_thread_pool *sth_pool;
 
     assert(max_threads_num >= 0);
-    if ((sth_pool = (synched_thread_pool *) malloc(sizeof(synched_thread_pool))) == NULL){
-	perror("malloc");
-	exit(-1);
-    }
-
+    sth_pool = synched_thread_malloc(sizeof(synched_thread_pool));
     sth_pool->max_threads_num = max_threads_num;
     pthread_mutex_init(&sth_pool->mutex, NULL);
     sth_pool->glued_list_container = glthread_create_list(synched_thread_key_match_cb,
-							  synched_thread_compare_cb,
-							  synched_thread_free_cb,
+							  NULL, NULL,
 							  offsetof(synched_thread, glue));
     return sth_pool;
 }
@@ -277,4 +273,79 @@ synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
     printf("Done with sending a signal to pooled thread\n");
 
     pthread_cond_signal(&thread->state_cv);
+}
+
+synched_thread_barrier *
+synched_thread_barrier_init(uint32_t threshold){
+    synched_thread_barrier *sync_barrier;
+
+    sync_barrier = (synched_thread_barrier *) synched_thread_malloc(sizeof(synched_thread_barrier));
+    sync_barrier->threshold = threshold;
+    sync_barrier->curr_wait_count = 0;
+    pthread_cond_init(&sync_barrier->cv, NULL);
+    pthread_mutex_init(&sync_barrier->mutex, NULL);
+    pthread_cond_init(&sync_barrier->busy_cv, NULL);
+    sync_barrier->releasing_barriered_threads = false;
+
+    return sync_barrier;
+}
+
+/*
+ * Thread barrier feature uses two condition variables, 'cv' and 'busy_cv'
+ * defined in the synched_thread_barrier.
+ *
+ * 'cv' is utilized for the threads blocked by the barrier until the 'curr_wait_count'
+ * reaches 'threshold'. The thread which arrived last starts to wake up other
+ * threads with this condition variable.
+ *
+ * 'busy_cv' works to block any threads trying to enter the barrier, from the moment
+ * when one thread reached the 'threshold', until the first waiting thread blocked
+ * by the barrier gets released.
+ */
+void
+synched_thread_barrier_wait(synched_thread_barrier *synched_barrier){
+    pthread_mutex_lock(&synched_barrier->mutex);
+
+    while (synched_barrier->releasing_barriered_threads == true){
+	pthread_cond_wait(&synched_barrier->busy_cv,
+			  &synched_barrier->mutex);
+    }
+
+    if (synched_barrier->curr_wait_count + 1 == synched_barrier->threshold){
+	synched_barrier->releasing_barriered_threads = false;
+	pthread_cond_signal(&synched_barrier->cv);
+	pthread_mutex_unlock(&synched_barrier->mutex);
+	return;
+    }
+
+    synched_barrier->curr_wait_count++;
+    pthread_cond_wait(&synched_barrier->cv, &synched_barrier->mutex);
+    synched_barrier->curr_wait_count--;
+
+    if (synched_barrier->curr_wait_count == 0){
+	/*
+	 * If this is the first waiting thread which blocked by the barrier,
+	 * then there is no more threads which should be woken up.
+	 *
+	 * Meanwhile, there can be some threads which are blocked
+	 * by this process to wake up the barriered threads by itself
+	 * with 'busy_cv'. Wake up them by pthread_cond_signal.
+	 */
+	synched_barrier->releasing_barriered_threads = true;
+	pthread_cond_broadcast(&synched_barrier->busy_cv);
+    }else{
+	/* Wake up another thread blocked by this barrier */
+	pthread_cond_signal(&synched_barrier->cv);
+    }
+
+    pthread_mutex_unlock(&synched_barrier->mutex);
+}
+
+void
+synched_thread_barrier_destroy(synched_thread_barrier *synched_barrier){
+    assert(synched_barrier->curr_wait_count == 0);
+    assert(synched_barrier->releasing_barriered_threads == false);
+    pthread_cond_destroy(synched_barrier->cv);
+    pthread_mutex_destroy(synched_barrier->mutex);
+    pthread_cond_destroy(synched_barrier->busy_cv);
 }

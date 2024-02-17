@@ -71,10 +71,6 @@ typedef struct synched_thread {
     pthread_mutex_t state_mutex;
     pthread_cond_t state_cv;
 
-    /*
-     * TODO : add zero semaphore
-     */
-
     /* Glue to be connected to the thread pool */
     glthread_node glue;
 
@@ -86,6 +82,16 @@ typedef struct synched_thread_pool {
     gldll *glued_list_container;
     pthread_mutex_t mutex;
 } synched_thread_pool;
+
+/* Thread barrier definition */
+typedef struct synched_thread_barrier {
+    uint32_t threshold;
+    uint32_t curr_wait_count;
+    pthread_cond_t cv;
+    pthread_mutex_t mutex;
+    pthread_cond_t busy_cv;
+    bool releasing_barriered_threads;
+} synched_thread_barrier;
 
 synched_thread *synched_thread_gen_empty_instance(synched_thread *sync_thread,
 						  uintptr_t thread_id, char *name,
@@ -107,7 +113,8 @@ void synched_thread_reached_pause_point(synched_thread *sync_thread);
 void synched_thread_wake_up(synched_thread *sync_thread);
 
 /*
- * Allow user to register functions synched thread will invoke before and after the pause.
+ * Allow user to register functions synched thread will invoke before and
+ * after the pause.
  *
  * It's possible that before the pause, the thread wants to process something
  * and after the wake up, the involvement of the application changes a lot.
@@ -128,5 +135,10 @@ glthread_node *synched_thread_get_thread(synched_thread_pool *sth_pool);
 void synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
 				    void *(*thread_fn)(void *),
 				    void *arg);
+
+/* Support thread barrier functionality */
+synched_thread_barrier *synched_thread_barrier_init(uint32_t threshold);
+void synched_thread_barrier_wait(synched_thread_barrier *synched_barrier);
+void synched_thread_barrier_destroy(synched_thread_barrier *synched_barrier);
 
 #endif

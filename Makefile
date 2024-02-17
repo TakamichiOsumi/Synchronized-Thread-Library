@@ -27,5 +27,5 @@ clean:
 	rm -rf $^ $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST)
 
 test: $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST)
-	@echo "Will execute the inbuilt basic test. It consumes some time..."
+	@echo "Will execute the inbuilt basic tests. It will consume some time..."
 	@./$(BASIC_OPERATION_TEST) &> /dev/null && echo "Successful if the return value is zero >>> $$?"
