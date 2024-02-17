@@ -345,7 +345,7 @@ void
 synched_thread_barrier_destroy(synched_thread_barrier *synched_barrier){
     assert(synched_barrier->curr_wait_count == 0);
     assert(synched_barrier->releasing_barriered_threads == false);
-    pthread_cond_destroy(synched_barrier->cv);
-    pthread_mutex_destroy(synched_barrier->mutex);
-    pthread_cond_destroy(synched_barrier->busy_cv);
+    pthread_cond_destroy(&synched_barrier->cv);
+    pthread_mutex_destroy(&synched_barrier->mutex);
+    pthread_cond_destroy(&synched_barrier->busy_cv);
 }
