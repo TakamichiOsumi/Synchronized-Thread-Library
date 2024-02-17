@@ -1,3 +1,9 @@
+# Program
+exec*
+
+# GNU GLOBAL
+G*
+
 # Prerequisites
 *.d
 
