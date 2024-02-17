@@ -5,8 +5,9 @@ LIBS	= -L $(CURDIR)/$(SUBDIRS)
 MYLIBS	= -lgldll
 BASIC_OPERATION_TEST	= exec_thread_sync
 THREAD_POOL_TEST	= exec_thread_pool
+THREAD_BARRIER_TEST	= exec_thread_barrier
 
-all: thread_sync.o $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST)
+all: thread_sync.o $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) $(THREAD_BARRIER_TEST)
 
 libgldll.a:
 	for dir in $(SUBDIRS); do make -C $$dir; done
@@ -19,6 +20,10 @@ $(BASIC_OPERATION_TEST): thread_sync.o
 
 $(THREAD_POOL_TEST): thread_sync.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_thread_pooling.c $^ -o $@
+
+$(THREAD_BARRIER_TEST): thread_sync.o
+	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_thread_barrier.c $^ -o $@
+
 
 .PHONY:clean test
 
