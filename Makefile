@@ -29,7 +29,7 @@ $(THREAD_BARRIER_TEST): thread_sync.o
 
 clean:
 	for dir in $(SUBDIRS); do cd $$dir; make clean; cd ..; done
-	rm -rf $^ $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST)
+	rm -rf $^ $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) $(THREAD_BARRIER_TEST)
 
 test: $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) $(THREAD_BARRIER_TEST)
 	@echo "Will execute the inbuilt basic tests. It will consume some time..."
