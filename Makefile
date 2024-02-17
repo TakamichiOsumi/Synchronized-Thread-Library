@@ -31,6 +31,8 @@ clean:
 	for dir in $(SUBDIRS); do cd $$dir; make clean; cd ..; done
 	rm -rf $^ $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST)
 
-test: $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST)
+test: $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) $(THREAD_BARRIER_TEST)
 	@echo "Will execute the inbuilt basic tests. It will consume some time..."
 	@./$(BASIC_OPERATION_TEST) &> /dev/null && echo "Successful if the return value is zero >>> $$?"
+	@echo "Will execute the thread barrier tests. It will consume some time..."
+	@./$(THREAD_BARRIER_TEST) &> /dev/null && echo "Successful if the return value is zero >>> $$?"

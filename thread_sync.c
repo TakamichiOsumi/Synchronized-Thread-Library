@@ -301,15 +301,14 @@ synched_thread_barrier_init(uint32_t threshold){
  * threads with this condition variable.
  *
  * 'busy_cv' works to block any threads trying to enter the barrier, from the moment
- * when one thread reached the 'threshold', until the first waiting thread blocked
- * by the barrier gets released.
+ * when one thread reached the 'threshold', until the first waiting thread blocked by
+ * the barrier gets released.
  */
 void
 synched_thread_barrier_wait(synched_thread_barrier *synched_barrier){
     pthread_mutex_lock(&synched_barrier->mutex);
 
     while (synched_barrier->releasing_barriered_threads == true){
-	printf("\t\tdebug : wait outside the barrier until 'curr_wait_count' becomes zero\n");
 	pthread_cond_wait(&synched_barrier->busy_cv,
 			  &synched_barrier->mutex);
     }
@@ -341,7 +340,6 @@ synched_thread_barrier_wait(synched_thread_barrier *synched_barrier){
 	 */
 	synched_barrier->releasing_barriered_threads = false;
 	pthread_cond_broadcast(&synched_barrier->busy_cv);
-	printf("\t\t\tdebug : will reopen the barrier\n");
     }else{
 	/* Wake up another thread blocked by this barrier consecutively */
 	pthread_cond_signal(&synched_barrier->cv);
@@ -357,4 +355,5 @@ synched_thread_barrier_destroy(synched_thread_barrier *synched_barrier){
     pthread_cond_destroy(&synched_barrier->cv);
     pthread_mutex_destroy(&synched_barrier->mutex);
     pthread_cond_destroy(&synched_barrier->busy_cv);
+    free(synched_barrier);
 }
