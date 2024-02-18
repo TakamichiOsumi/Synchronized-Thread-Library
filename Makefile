@@ -14,19 +14,19 @@ all: $(TEST_SETS) $(TARGET_LIB)
 libgldll.a:
 	for dir in $(SUBDIRS); do make -C $$dir; done
 
-thread_sync.o: libgldll.a
-	$(CC) $(CFLAGS) thread_sync.c -c
+synched_thread_core.o: libgldll.a
+	$(CC) $(CFLAGS) synched_thread_core.c -c
 
-$(BASIC_OPERATION_TEST): thread_sync.o
+$(BASIC_OPERATION_TEST): synched_thread_core.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_pause_and_wakeup.c $^ -o $@
 
-$(THREAD_POOL_TEST): thread_sync.o
+$(THREAD_POOL_TEST): synched_thread_core.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_thread_pooling.c $^ -o $@
 
-$(THREAD_BARRIER_TEST): thread_sync.o
+$(THREAD_BARRIER_TEST): synched_thread_core.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_thread_barrier.c $^ -o $@
 
-$(TARGET_LIB): thread_sync.o
+$(TARGET_LIB): synched_thread_core.o
 	ar rs $@ $<
 
 .PHONY:clean test

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include "thread_sync.h"
+#include "synched_thread_core.h"
 #include "Glued-Doubly-Linked-List/glthreads.h"
 
 static void *

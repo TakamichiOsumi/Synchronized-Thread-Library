@@ -5,7 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include "thread_sync.h"
+#include "synched_thread_core.h"
 
 #define THREAD_BARRIER_THRESHOLD 3
 synched_thread_barrier *thread_barrier = NULL;

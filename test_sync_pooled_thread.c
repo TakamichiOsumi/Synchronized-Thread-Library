@@ -5,7 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include "thread_sync.h"
+#include "synched_thread_core.h"
 #include "Glued-Doubly-Linked-List/glthreads.h"
 
 #define MAX_THREADS_NUM 8
