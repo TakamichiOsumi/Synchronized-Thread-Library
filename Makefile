@@ -31,7 +31,7 @@ $(TARGET_LIB): synched_thread_core.o
 
 .PHONY:clean test
 
-clean:
+clean: synched_thread_core.o
 	for dir in $(SUBDIRS); do cd $$dir; make clean; cd ..; done
 	rm -rf $^ $(TEST_SETS) $(TARGET_LIB)
 
