@@ -41,7 +41,9 @@ clean: synched_thread_core.o
 	rm -rf $^ $(TEST_SETS) $(TARGET_LIB)
 
 test: $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) $(THREAD_BARRIER_TEST)
-	@echo "Will execute the inbuilt basic tests. It will consume some time..."
-	@./$(BASIC_OPERATION_TEST) &> /dev/null && echo "Successful if the return value is zero >>> $$?"
-	@echo "Will execute the thread barrier tests. It will consume some time..."
-	@./$(THREAD_BARRIER_TEST) &> /dev/null && echo "Successful if the return value is zero >>> $$?"
+	@echo "Will execute the thread synchronization basic tests."
+	@./$(BASIC_OPERATION_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
+	@echo "Will execute the thread barrier tests."
+	@./$(THREAD_BARRIER_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
+	@echo "Will execute the thread barrier tests."
+	@./$(WAIT_QUEUE_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
