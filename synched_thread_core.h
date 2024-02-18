@@ -93,7 +93,7 @@ typedef struct synched_thread_barrier {
     bool releasing_barriered_threads;
 } synched_thread_barrier;
 
-/* Wait Queues */
+/* Wait Queue */
 typedef struct synched_thread_wait_queue {
     uintptr_t thread_wait_count;
     /* CV on which multiple threads in wait-queue are blocked */

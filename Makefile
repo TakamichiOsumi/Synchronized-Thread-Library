@@ -1,7 +1,9 @@
 CC	= gcc
 CFLAGS	= -O0 -Wall
-SUBDIRS = Glued-Doubly-Linked-List
-LIBS	= -L $(CURDIR)/$(SUBDIRS)
+SUBDIR1 = Glued-Doubly-Linked-List
+SUBDIR2	=  Linked-List
+SUBDIRS = $(SUBDIR1) $(SUBDIR2)
+LIBS	= -L $(CURDIR)/$(SUBDIR1) -L $(CURDIR)/$(SUBDIR2)
 MYLIBS	= -lgldll
 BASIC_OPERATION_TEST	= exec_thread_sync
 THREAD_POOL_TEST	= exec_thread_pool
