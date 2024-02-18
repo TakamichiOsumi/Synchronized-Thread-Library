@@ -93,6 +93,15 @@ typedef struct synched_thread_barrier {
     bool releasing_barriered_threads;
 } synched_thread_barrier;
 
+/* Wait Queues */
+typedef struct synched_thread_wait_queue {
+    uintptr_t thread_wait_count;
+    /* CV on which multiple threads in wait-queue are blocked */
+    pthread_cond_t cv;
+    /* Application owned mutex cached by wait-queue */
+    pthread_mutex_t *app_mutex;
+} synched_thread_wait_queue;
+
 synched_thread *synched_thread_gen_empty_instance(synched_thread *sync_thread,
 						  uintptr_t thread_id, char *name,
 						  pthread_t *handler);
@@ -140,5 +149,16 @@ void synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
 synched_thread_barrier *synched_thread_barrier_init(uint32_t threshold);
 void synched_thread_barrier_wait(synched_thread_barrier *synched_barrier);
 void synched_thread_barrier_destroy(synched_thread_barrier *synched_barrier);
+
+/* Support wait queue functionality */
+typedef bool (*synched_thread_wait_queue_cond_fn)(void *app_arg,
+						  pthread_mutex_t *out_mutex);
+synched_thread_wait_queue *synched_thread_wait_queue_init(void);
+void synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
+					     synched_thread_wait_queue_cond_fn cond_fn,
+					     void *arg);
+void synched_thread_wait_queue_signal(synched_thread_wait_queue *wq,
+				      bool lock_mutex, bool broadcast);
+void synched_thread_wait_queue_destroy(synched_thread_wait_queue *wq);
 
 #endif

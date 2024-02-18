@@ -357,3 +357,66 @@ synched_thread_barrier_destroy(synched_thread_barrier *synched_barrier){
     pthread_cond_destroy(&synched_barrier->busy_cv);
     free(synched_barrier);
 }
+
+synched_thread_wait_queue *
+synched_thread_wait_queue_init(void){
+    synched_thread_wait_queue *wq;
+
+    wq = (synched_thread_wait_queue *) smalloc(sizeof(synched_thread_wait_queue));
+    pthread_cond_init(&wq->cv, NULL);
+    pthread_mutex_init(wq->app_mutex, NULL);
+
+    return wq;
+}
+
+void
+synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
+					synched_thread_wait_queue_cond_fn cond_fn,
+					void *arg){
+    bool should_block;
+    pthread_mutex_t *locked_app_mutex = NULL;
+
+    should_block = cond_fn(arg, locked_app_mutex); /* locking mode */
+    wq->app_mutex = locked_app_mutex;
+
+    while(should_block){
+	wq->thread_wait_count++;
+	pthread_cond_wait(&wq->cv, wq->app_mutex);
+	wq->thread_wait_count--;
+	should_block = cond_fn(arg, NULL); /* non-locking mode */
+    }
+}
+
+/*
+ * When the caller of this API has a lock on the mutex of wait queue,
+ * 'lock_mutex' should be false to avoid taking the lock again.
+ */
+void
+synched_thread_wait_queue_signal(synched_thread_wait_queue *wq,
+				 bool lock_mutex, bool broadcast){
+    if (!wq->app_mutex)
+	return;
+
+    if (lock_mutex)
+	pthread_mutex_lock(wq->app_mutex);
+
+    if (wq->thread_wait_count <= 0){
+	if (lock_mutex)
+	    pthread_mutex_unlock(wq->app_mutex);
+	return;
+    }
+
+    if (broadcast)
+	pthread_cond_broadcast(&wq->cv);
+    else
+	pthread_cond_signal(&wq->cv);
+
+    if (lock_mutex)
+	pthread_mutex_unlock(wq->app_mutex);
+}
+
+void
+synched_thread_wait_queue_destroy(synched_thread_wait_queue *wq){
+    pthread_cond_destroy(&wq->cv);
+    wq->app_mutex = NULL;
+}

@@ -6,7 +6,9 @@ MYLIBS	= -lgldll
 BASIC_OPERATION_TEST	= exec_thread_sync
 THREAD_POOL_TEST	= exec_thread_pool
 THREAD_BARRIER_TEST	= exec_thread_barrier
-TEST_SETS	= $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) $(THREAD_BARRIER_TEST)
+WAIT_QUEUE_TEST	= exec_wait_queue
+TEST_SETS	= $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) \
+			$(THREAD_BARRIER_TEST) $(WAIT_QUEUE_TEST)
 TARGET_LIB	= libsynched_thread.a
 
 all: $(TEST_SETS) $(TARGET_LIB)
@@ -25,6 +27,9 @@ $(THREAD_POOL_TEST): synched_thread_core.o
 
 $(THREAD_BARRIER_TEST): synched_thread_core.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_thread_barrier.c $^ -o $@
+
+$(WAIT_QUEUE_TEST): synched_thread_core.o
+	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_wait_queue.c $^ -o $@
 
 $(TARGET_LIB): synched_thread_core.o
 	ar rs $@ $<
