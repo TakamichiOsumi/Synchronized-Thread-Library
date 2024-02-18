@@ -1,3 +1,6 @@
 [submodule "Glued-Doubly-Linked-List"]
 	path = Glued-Doubly-Linked-List
 	url = https://github.com/TakamichiOsumi/Glued-Doubly-Linked-List.git
+[submodule "Linked-List"]
+	path = Linked-List
+	url = https://github.com/TakamichiOsumi/Linked-List.git
