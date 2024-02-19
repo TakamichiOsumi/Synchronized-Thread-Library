@@ -3,9 +3,11 @@
 
 int
 main(int argc, char *argv[]){
-    DIRECTION d = EAST;
+    vehicle *v;
 
-    printf("%d\n", d);
+    v = create_vehicle(1, NORTH);
+
+    print_vehicle(v);
 
     return 0;
 }

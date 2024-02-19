@@ -30,7 +30,10 @@ $(THREAD_POOL_TEST): synched_thread_core.o
 $(THREAD_BARRIER_TEST): synched_thread_core.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_thread_barrier.c $^ -o $@
 
-$(WAIT_QUEUE_TEST): synched_thread_core.o
+emulate_traffic_intersection.o: emulate_traffic_intersection.c
+	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) -c $< -o $@
+
+$(WAIT_QUEUE_TEST): synched_thread_core.o emulate_traffic_intersection.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_wait_queue.c $^ -o $@
 
 $(TARGET_LIB): synched_thread_core.o
