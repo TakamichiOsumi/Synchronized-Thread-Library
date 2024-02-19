@@ -21,11 +21,9 @@ smalloc(size_t size){
 
 synched_thread *
 synched_thread_gen_empty_instance(synched_thread *sync_thread,
-				  uintptr_t thread_id, char *name,
-				  pthread_t *handler){
+				  uintptr_t thread_id, pthread_t *handler){
 
     sync_thread->thread_id = thread_id;
-    strncpy(sync_thread->name, name, sizeof(sync_thread->name));
     sync_thread->thread = handler;
     pthread_attr_init(&sync_thread->attributes);
 
@@ -55,24 +53,24 @@ synched_thread_standby_run(void *arg){
     synched_thread *thread = (synched_thread *) arg;
 
     while(1){
-	printf("[%s : %p] Will wait for pthread_cond_signal()...\n",
-	       thread->name, pthread_self());
+	printf("[%lu : %p] Will wait for pthread_cond_signal()...\n",
+	       thread->thread_id, pthread_self());
 
 	pthread_mutex_lock(&thread->state_mutex);
 	pthread_cond_wait(&thread->state_cv,
 			  &thread->state_mutex);
 	pthread_mutex_unlock(&thread->state_mutex);
 
-	printf("[%s : %p] Woke up...\n", thread->name, pthread_self());
+	printf("[%lu : %p] Woke up...\n", thread->thread_id, pthread_self());
 
 	if (thread->deferred_main_fn){
-	    printf("[%s : %p] Will execute the user request main function...\n",
-		   thread->name, pthread_self());
+	    printf("[%lu : %p] Will execute the user request main function...\n",
+		   thread->thread_id, pthread_self());
 	    (thread->deferred_main_fn)(thread->deferred_main_arg);
 	}
 
-	printf("[%s : %p] All works are done. Loop back to the beginning.\n",
-	       thread->name, pthread_self());
+	printf("[%lu : %p] All works are done. Loop back to the beginning.\n",
+	       thread->thread_id, pthread_self());
 
 	/* Reset */
 	thread->deferred_main_fn = NULL;

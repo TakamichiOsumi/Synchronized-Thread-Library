@@ -25,14 +25,12 @@
 #define THREAD_PAUSED (1 << 3)
 #define THREAD_BLOCKED (1 << 4)
 
-#define THREAD_NAME_LEN 64
 struct synched_thread_pool;
 
 typedef struct synched_thread {
 
     /* Basic information about the pthread itself */
     uintptr_t thread_id;
-    char name[THREAD_NAME_LEN];
     pthread_t *thread;
     pthread_attr_t attributes;
 
@@ -103,8 +101,7 @@ typedef struct synched_thread_wait_queue {
 } synched_thread_wait_queue;
 
 synched_thread *synched_thread_gen_empty_instance(synched_thread *sync_thread,
-						  uintptr_t thread_id, char *name,
-						  pthread_t *handler);
+						  uintptr_t thread_id, pthread_t *handler);
 void synched_thread_set_thread_attribute(synched_thread *sync_thread,
 					 bool joinable);
 void synched_thread_run(synched_thread *sync_thread,

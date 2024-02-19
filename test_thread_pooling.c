@@ -51,7 +51,6 @@ main(int argc, char **argv){
     synched_thread_pool *thread_pool;
     synched_thread *thread;
     pthread_t handlers[MAX_THREADS_NUM];
-    char thread_name_buf[THREAD_NAME_LEN];
     int i;
 
     thread_pool = synched_thread_pool_init(MAX_THREADS_NUM);
@@ -59,10 +58,7 @@ main(int argc, char **argv){
     for (i = 0; i < MAX_THREADS_NUM; i++){
 	/* Create standby threads */
 	thread = (synched_thread *) xmalloc(sizeof(synched_thread));
-	snprintf(thread_name_buf, sizeof(thread_name_buf),
-		 "%s=%d", "thread", i);
-	synched_thread_gen_empty_instance(thread, i,
-					  thread_name_buf, &handlers[i]);
+	synched_thread_gen_empty_instance(thread, i, &handlers[i]);
 	synched_thread_set_thread_attribute(thread, true);
 
 	/* This thread is ready to be pooled. Make it wait in the background */

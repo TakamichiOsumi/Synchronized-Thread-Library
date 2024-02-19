@@ -23,13 +23,10 @@ get_thread_id_str(thread_id id){
 }
 
 typedef struct thread_shared_data {
-
     /* The size of array */
     uintptr_t max_threads_num;
-
     /* An array of all (synched) threads */
     synched_thread *sync_handlers;
-
 } thread_shared_data;
 
 #define MAX_THREADS_NUM 2
@@ -124,8 +121,7 @@ int
 main(int argc, char **argv){
 
     thread_shared_data tsd;
-    pthread_t handlers[THREAD_NAME_LEN];
-    char thread_name[THREAD_NAME_LEN];
+    pthread_t handlers[MAX_THREADS_NUM];
     int i;
 
     tsd.max_threads_num = MAX_THREADS_NUM;
@@ -133,9 +129,7 @@ main(int argc, char **argv){
     tsd.sync_handlers = (synched_thread *) xmalloc(sizeof(synched_thread) * MAX_THREADS_NUM);
 
     for (i = 0; i < MAX_THREADS_NUM; i++){
-	snprintf(thread_name, sizeof(thread_name), "%s%d", "thread", i);
-	synched_thread_gen_empty_instance(&tsd.sync_handlers[i], i,
-					  thread_name, &handlers[i]);
+	synched_thread_gen_empty_instance(&tsd.sync_handlers[i], i, &handlers[i]);
 	synched_thread_set_thread_attribute(&tsd.sync_handlers[i], true);
 	synched_thread_set_pause_fn(&tsd.sync_handlers[i],
 				    i == T2 ? pause_fn_cb : NULL,
