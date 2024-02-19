@@ -1,6 +1,6 @@
-# Thread-Synchronization (WIP)
+# Synchronized Thread Library (WIP)
 
-Based on pthead library, implement another thread utility library that enables user to enjoy below features:
+Based on pthead library, implement another thread library that enables user to enjoy below thread synchronization features:
 
 1. Pause and resume threads
 
