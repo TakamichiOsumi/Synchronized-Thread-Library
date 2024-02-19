@@ -363,7 +363,9 @@ synched_thread_wait_queue_init(void){
     synched_thread_wait_queue *wq;
 
     wq = (synched_thread_wait_queue *) smalloc(sizeof(synched_thread_wait_queue));
+    wq->thread_wait_count = 0;
     pthread_cond_init(&wq->cv, NULL);
+    wq->app_mutex = (pthread_mutex_t *) smalloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(wq->app_mutex, NULL);
 
     return wq;

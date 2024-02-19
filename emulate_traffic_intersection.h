@@ -44,5 +44,6 @@ typedef struct traffic_intersection_map {
 void *vmalloc(size_t size);
 void print_vehicle(vehicle *v);
 vehicle *create_vehicle(uintptr_t vehicle_no, direction from);
+traffic_intersection_map *create_intersection_map(void);
 
 #endif

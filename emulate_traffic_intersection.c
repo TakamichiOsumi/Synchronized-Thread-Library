@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "emulate_traffic_intersection.h"
+#include "Linked-List/linked_list.h"
 
 void *
 vmalloc(size_t size){
@@ -17,7 +18,8 @@ vmalloc(size_t size){
 
 void
 print_vehicle(vehicle *v){
-    printf("No=%lu : pos[%d, %d]\n", v->vehicle_no, v->pos.x, v->pos.y);
+    printf("No=%lu : pos[%d, %d]\n", v->vehicle_no,
+	   v->pos.x, v->pos.y);
 }
 
 vehicle *
@@ -51,4 +53,27 @@ create_vehicle(uintptr_t vehicle_no, direction from){
     }
 
     return v;
+}
+
+bool
+vehicle_key_match(void *data, void *key){
+    vehicle *v;
+
+    /* 'data' is (void *) &vehicle */
+    v = (vehicle *) data;
+    if (v->vehicle_no == (uintptr_t) key)
+        return true;
+    else
+        return false;
+}
+
+traffic_intersection_map *
+create_intersection_map(void){
+    traffic_intersection_map *map;
+
+    map = (traffic_intersection_map *) vmalloc(sizeof(traffic_intersection_map));
+    map->wq = synched_thread_wait_queue_init();
+    map->vehicles = ll_init(vehicle_key_match);
+
+    return map;
 }

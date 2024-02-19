@@ -4,7 +4,7 @@ SUBDIR1 = Glued-Doubly-Linked-List
 SUBDIR2	=  Linked-List
 SUBDIRS = $(SUBDIR1) $(SUBDIR2)
 LIBS	= -L $(CURDIR)/$(SUBDIR1) -L $(CURDIR)/$(SUBDIR2)
-MYLIBS	= -lgldll
+MYLIBS	= -lgldll -llinked_list
 BASIC_OPERATION_TEST	= exec_thread_sync
 THREAD_POOL_TEST	= exec_thread_pool
 THREAD_BARRIER_TEST	= exec_thread_barrier
@@ -15,7 +15,7 @@ TARGET_LIB	= libsynched_thread.a
 
 all: $(TEST_SETS) $(TARGET_LIB)
 
-libgldll.a:
+libgldll.a liblinked_list.a:
 	for dir in $(SUBDIRS); do make -C $$dir; done
 
 synched_thread_core.o: libgldll.a
@@ -31,7 +31,7 @@ $(THREAD_BARRIER_TEST): synched_thread_core.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_thread_barrier.c $^ -o $@
 
 emulate_traffic_intersection.o: emulate_traffic_intersection.c
-	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(WAIT_QUEUE_TEST): synched_thread_core.o emulate_traffic_intersection.o
 	$(CC) $(CFLAGS) $(LIBS) $(MYLIBS) test_wait_queue.c $^ -o $@
@@ -43,12 +43,12 @@ $(TARGET_LIB): synched_thread_core.o
 
 clean: synched_thread_core.o
 	for dir in $(SUBDIRS); do cd $$dir; make clean; cd ..; done
-	rm -rf $^ $(TEST_SETS) $(TARGET_LIB)
+	rm -rf $(TEST_SETS) $(TARGET_LIB) *.o
 
-test: $(BASIC_OPERATION_TEST) $(THREAD_POOL_TEST) $(THREAD_BARRIER_TEST)
+test: $(TEST_SETS)
 	@echo "Will execute the thread synchronization basic tests."
 	@./$(BASIC_OPERATION_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
 	@echo "Will execute the thread barrier tests."
 	@./$(THREAD_BARRIER_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
-	@echo "Will execute the thread barrier tests."
+	@echo "Will execute the wait queue tests."
 	@./$(WAIT_QUEUE_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
