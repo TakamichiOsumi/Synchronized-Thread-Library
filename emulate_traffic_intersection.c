@@ -30,6 +30,7 @@ create_vehicle(uintptr_t vehicle_no, direction from){
     v->vehicle_no = vehicle_no;
     v->from = from;
     v->to = (from + 2) % 4;
+
     switch(from){
 	case NORTH:
 	    v->pos.x = 1;
@@ -59,7 +60,6 @@ bool
 vehicle_key_match(void *data, void *key){
     vehicle *v;
 
-    /* 'data' is (void *) &vehicle */
     v = (vehicle *) data;
     if (v->vehicle_no == (uintptr_t) key)
         return true;
@@ -86,19 +86,24 @@ void
 print_intersection_map(traffic_intersection_map *imap){
     node *n;
 
-    printf("traffic light : vertical direction %s\n",
+    printf("---- The current map ----\n");
+    printf("traffic light : vertical direction : %s\n",
 	   traffic_light_color_char(imap->horizontal_direction));
-    printf("traffic light : horizontal direction %s\n",
+    printf("traffic light : horizontal direction : %s\n",
 	   traffic_light_color_char(imap->vertical_direction));
 
+
     if (ll_is_empty(imap->vehicles)){
+	printf("--------------------------\n");
 	return;
     }else{
+	printf("---- The current vehicles in the map ----\n");
 	n = imap->vehicles->head;
 	while(n){
 	    print_vehicle((vehicle *) n->data);
 	    n = n->next;
 	}
+	printf("--------------------------\n");
     }
 }
 
@@ -113,4 +118,39 @@ create_intersection_map(void){
     map->vehicles = ll_init(vehicle_key_match);
 
     return map;
+}
+
+void
+insert_vehicle_into_intersection_map(traffic_intersection_map *imap,
+				      vehicle *v){
+    if (!imap || !v)
+	return;
+
+    ll_insert(imap->vehicles, (void *) v);
+}
+
+static void *
+let_vehicle_move(void *arg){
+    traffic_intersection_map *imap;
+    vehicle *v;
+
+    v = (vehicle *) arg;
+    imap = v->imap;
+
+    printf("vehicle (id = %lu) has been set\n", v->vehicle_no);
+
+    return NULL;
+}
+
+void
+place_moving_vehicle_on_map(traffic_intersection_map *imap,
+			    vehicle *v){
+    if (!imap || !v)
+	return;
+
+    insert_vehicle_into_intersection_map(imap, v);
+
+    v->imap = imap;
+
+    pthread_create(&v->handler, NULL, let_vehicle_move, (void *) v);
 }

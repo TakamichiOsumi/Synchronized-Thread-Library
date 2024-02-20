@@ -13,14 +13,6 @@ typedef enum direction {
     NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3
 } direction;
 
-/* Define the life cycle of a vehicle in the map */
-typedef enum vehicle_status {
-    ENTER,
-    WAIT,
-    PASS,
-    EXIT
-} vehicle_status;
-
 typedef enum traffic_light_color {
     RED, GREEN, YELLOW
 } traffic_light_color;
@@ -30,13 +22,16 @@ typedef struct position {
     int y; /* from 0 to 2 only */
 } position;
 
+struct traffic_intersection_map;
+
 typedef struct vehicle {
     /* thread id */
     uintptr_t vehicle_no;
     direction from;
     direction to;
-    vehicle_status status;
     position pos;
+    pthread_t handler;
+    struct traffic_intersection_map *imap;
 } vehicle;
 
 /* Define one intersection */
@@ -52,5 +47,9 @@ void print_vehicle(vehicle *v);
 void print_intersection_map(traffic_intersection_map *imap);
 vehicle *create_vehicle(uintptr_t vehicle_no, direction from);
 traffic_intersection_map *create_intersection_map(void);
+void insert_vehicle_into_intersection_map(traffic_intersection_map *imap,
+					  vehicle *v);
+void place_moving_vehicle_on_map(traffic_intersection_map *imap,
+				 vehicle *v);
 
 #endif
