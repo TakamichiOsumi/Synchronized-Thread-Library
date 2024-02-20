@@ -152,6 +152,12 @@ vehicle_wait_cb(void *app_arg, pthread_mutex_t **out_mutex){
     imap = v->imap;
 
     if (out_mutex){
+	/*
+	 * Take a lock for traffic map reference,
+	 * only when out_mutex is set. This prevents
+	 * the caller of this function from taking
+	 * duplicate locks on the imap->mutex.
+	 */
 	pthread_mutex_lock(&imap->mutex);
 	*out_mutex = &imap->mutex;
     }

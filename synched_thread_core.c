@@ -385,6 +385,10 @@ synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
 
     while(should_block){
 	wq->thread_wait_count++;
+	/*
+	 * Monitor traffic light condition variable which is
+	 * signaled in synched_thread_wait_queue_signal.
+	 */
 	pthread_cond_wait(&wq->cv, wq->app_mutex);
 	wq->thread_wait_count--;
 	should_block = cond_fn(arg, NULL); /* non-locking mode */
@@ -397,8 +401,12 @@ synched_thread_wait_queue_unlock(synched_thread_wait_queue *wq){
 }
 
 /*
- * When the caller of this API has a lock on the mutex of wait queue,
- * 'lock_mutex' should be false to avoid taking the lock again.
+ * If the caller of this API has a lock on the mutex of wait queue already,
+ * then 'lock_mutex' should be false to avoid taking the lock again.
+ *
+ * Send signals to waiting threads blocked by
+ * synched_thread_wait_queue_test_and_wait, after the caller
+ * change the status of interested application data.
  */
 void
 synched_thread_wait_queue_signal(synched_thread_wait_queue *wq,
