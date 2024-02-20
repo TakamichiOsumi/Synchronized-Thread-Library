@@ -67,11 +67,48 @@ vehicle_key_match(void *data, void *key){
         return false;
 }
 
+char *
+traffic_light_color_char(traffic_light_color color){
+    switch(color){
+	case RED:
+	    return "RED";
+	case GREEN:
+	    return "GREEN";
+	case YELLOW:
+	    return "YELLOW";
+	default:
+	    assert(0);
+	    return NULL;
+    }
+}
+
+void
+print_intersection_map(traffic_intersection_map *imap){
+    node *n;
+
+    printf("traffic light : vertical direction %s\n",
+	   traffic_light_color_char(imap->horizontal_direction));
+    printf("traffic light : horizontal direction %s\n",
+	   traffic_light_color_char(imap->vertical_direction));
+
+    if (ll_is_empty(imap->vehicles)){
+	return;
+    }else{
+	n = imap->vehicles->head;
+	while(n){
+	    print_vehicle((vehicle *) n->data);
+	    n = n->next;
+	}
+    }
+}
+
 traffic_intersection_map *
 create_intersection_map(void){
     traffic_intersection_map *map;
 
     map = (traffic_intersection_map *) vmalloc(sizeof(traffic_intersection_map));
+    map->horizontal_direction = RED;
+    map->vertical_direction = RED;
     map->wq = synched_thread_wait_queue_init();
     map->vehicles = ll_init(vehicle_key_match);
 

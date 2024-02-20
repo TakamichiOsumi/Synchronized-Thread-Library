@@ -101,7 +101,8 @@ typedef struct synched_thread_wait_queue {
 } synched_thread_wait_queue;
 
 synched_thread *synched_thread_gen_empty_instance(synched_thread *sync_thread,
-						  uintptr_t thread_id, pthread_t *handler);
+						  uintptr_t thread_id,
+						  pthread_t *handler);
 void synched_thread_set_thread_attribute(synched_thread *sync_thread,
 					 bool joinable);
 void synched_thread_run(synched_thread *sync_thread,
