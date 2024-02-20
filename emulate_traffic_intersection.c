@@ -88,9 +88,9 @@ print_intersection_map(traffic_intersection_map *imap){
     printf("---- The current map ----\n");
 
     printf("traffic light : vertical direction : %s\n",
-	   traffic_light_color_char(imap->horizontal_direction));
-    printf("traffic light : horizontal direction : %s\n",
 	   traffic_light_color_char(imap->vertical_direction));
+    printf("traffic light : horizontal direction : %s\n",
+	   traffic_light_color_char(imap->horizontal_direction));
 
     if (ll_is_empty(imap->vehicles)){
 	printf("--------------------------\n");
