@@ -386,7 +386,7 @@ synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
     while(should_block){
 	wq->thread_wait_count++;
 	/*
-	 * Monitor traffic light condition variable which is
+	 * Monitor application specific condition variable which is
 	 * signaled in synched_thread_wait_queue_signal.
 	 */
 	pthread_cond_wait(&wq->cv, wq->app_mutex);
