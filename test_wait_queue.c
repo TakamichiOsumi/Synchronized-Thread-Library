@@ -67,6 +67,7 @@ get_integer_within_range(char *description,
 static void
 handle_user_input(traffic_intersection_map *imap){
     int val;
+    traffic_light_color *c;
 
     while(1){
 	printf("Choose one of the numbers :\n"
@@ -77,40 +78,25 @@ handle_user_input(traffic_intersection_map *imap){
 
 	switch(val){
 	    case 1:
-		printf("\tChoose one of the numbers :\n"
-		       "\t[1] Turn the vertical traffic light to RED\n"
-		       "\t[2] Turn the vertical traffic light to YELLOW\n"
-		       "\t[3] Turn the vertical traffic light to GREEN\n"
-		       "\t[4] Turn the horizontal traffic light to RED\n"
-		       "\t[5] Turn the horizontal traffic light to YELLOW\n"
-		       "\t[6] Turn the horizontal traffic light to GREEN\n");
-		val = get_integer_within_range("\t>>> ", 1, 6);
-		switch(val){
-		    case 1:
-			imap->vertical_direction = RED;
-			break;
-		    case 2:
-			imap->vertical_direction = YELLOW;
-			break;
-		    case 3:
-			imap->vertical_direction = GREEN;
-			break;
-		    case 4:
-			imap->horizontal_direction = RED;
-			break;
-		    case 5:
-			imap->horizontal_direction = YELLOW;
-			break;
-		    case 6:
-			imap->horizontal_direction = GREEN;
-			break;
-		    default:
-			break;
-		}
-		synched_thread_wait_queue_signal(imap->wq, false, true);
-		sleep(2);
+		printf("OK, choose one of the numbers :\n"
+		       "Change the vertical traffic light to RED(0), YELLOW(1) or GREEN(2) or\n"
+		       "Change the horizontal traffic light to RED(3), YELLOW(4) or GREEN(5)\n");
+		val = get_integer_within_range(">>> ", 0, 5);
+
+		if (val <= 2)
+		    c = &imap->vertical_direction;
+		else
+		    c = &imap->horizontal_direction;
+		*c = val % 3;
+
+		synched_thread_wait_queue_signal(imap->wq, true, true);
+
+		sleep(1);
+
 		break;
 	    case 2:
+		// v = create_vehicle(,);
+		// place_moving_vehicle_on_map(imap, v);
 		break;
 	    case 3:
 		print_intersection_map(imap);
@@ -128,15 +114,15 @@ main(int argc, char *argv[]){
     int i;
 
     imap = create_intersection_map();
-    for (i = 0; i < THREADS_NO; i++){
+    for (i = 1; i <= THREADS_NO; i++){
 	v = create_vehicle(i, i % 4);
 	place_moving_vehicle_on_map(imap, v);
     }
 
     assert(ll_get_length(imap->vehicles) == THREADS_NO);
 
-    /* Wait for the startups of all the threads */
-    sleep(2);
+    /* Wait for the startup of all the threads */
+    sleep(1);
 
     handle_user_input(imap);
 

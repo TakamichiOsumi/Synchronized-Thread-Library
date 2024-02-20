@@ -165,6 +165,7 @@ synched_thread_wait_queue *synched_thread_wait_queue_init(void);
 void synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
 					     synched_thread_wait_queue_cond_fn cond_fn,
 					     void *arg);
+void synched_thread_wait_queue_unlock(synched_thread_wait_queue *wq);
 void synched_thread_wait_queue_signal(synched_thread_wait_queue *wq,
 				      bool lock_mutex, bool broadcast);
 void synched_thread_wait_queue_destroy(synched_thread_wait_queue *wq);

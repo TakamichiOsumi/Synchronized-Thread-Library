@@ -15,7 +15,7 @@ typedef enum direction {
 } direction;
 
 typedef enum traffic_light_color {
-    RED, GREEN, YELLOW
+    RED = 0, YELLOW = 1, GREEN = 2
 } traffic_light_color;
 
 typedef struct position {
@@ -55,6 +55,7 @@ vehicle *create_vehicle(uintptr_t vehicle_no, direction from);
 traffic_intersection_map *create_intersection_map(void);
 void insert_vehicle_into_intersection_map(traffic_intersection_map *imap,
 					  vehicle *v);
+void remove_vehicle_from_map(traffic_intersection_map *imap, vehicle *v);
 void place_moving_vehicle_on_map(traffic_intersection_map *imap,
 				 vehicle *v);
 

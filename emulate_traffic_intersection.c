@@ -126,7 +126,9 @@ insert_vehicle_into_intersection_map(traffic_intersection_map *imap,
     if (!imap || !v)
 	return;
 
+    pthread_mutex_lock(&imap->mutex);
     ll_insert(imap->vehicles, (void *) v);
+    pthread_mutex_unlock(&imap->mutex);
 }
 
 bool
@@ -142,12 +144,14 @@ vehicle_wait_cb(void *app_arg, pthread_mutex_t **out_mutex){
     }
 
     if (IS_MOVING_VERTICALLY(v)){
-	if (imap->vertical_direction == RED)
+	if (imap->vertical_direction == RED ||
+	    imap->vertical_direction == YELLOW)
 	    return true;
 	else
 	    return false;
     }else if (IS_MOVING_HORIZONTALLY(v)){
-	if (imap->horizontal_direction == RED)
+	if (imap->horizontal_direction == RED ||
+	    imap->horizontal_direction == YELLOW)
 	    return true;
 	else
 	    return false;
@@ -156,6 +160,24 @@ vehicle_wait_cb(void *app_arg, pthread_mutex_t **out_mutex){
     assert(0);
 
     return false;
+}
+
+void
+remove_vehicle_from_map(traffic_intersection_map *imap,
+			vehicle *v){
+    node *n;
+    vehicle *removed_vehicle;
+
+    pthread_mutex_lock(&imap->mutex);
+    if ((n = ll_remove(imap->vehicles, (void *) v->vehicle_no)) == NULL)
+	printf("Could not remove vehicle_no = %lu\n", v->vehicle_no);
+    else{
+	printf("Will remove vehicle_no = %lu\n", v->vehicle_no);
+	removed_vehicle = (vehicle *) n->data;
+	free(n);
+	free(removed_vehicle);
+    }
+    pthread_mutex_unlock(&imap->mutex);
 }
 
 static void *
@@ -173,15 +195,18 @@ let_vehicle_move(void *arg){
 						vehicle_wait_cb, v);
 	printf("vehicle (id = %lu) has passed the intersection\n",
 	       v->vehicle_no);
-	pthread_mutex_unlock(imap->wq->app_mutex);
     }else if(IS_MOVING_HORIZONTALLY(v)){
 	synched_thread_wait_queue_test_and_wait(imap->wq,
 						vehicle_wait_cb, v);
 	printf("vehicle (id = %lu) has passed the intersection\n",
 	       v->vehicle_no);
-	pthread_mutex_unlock(imap->wq->app_mutex);
     }else
 	assert(0);
+
+    synched_thread_wait_queue_unlock(imap->wq);
+
+    /* Remove the vehicle from the map */
+    remove_vehicle_from_map(imap, v);
 
     return NULL;
 }

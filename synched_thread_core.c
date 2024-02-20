@@ -369,6 +369,10 @@ synched_thread_wait_queue_init(void){
     return wq;
 }
 
+/*
+ * The caller is responsible for unlocking the application's mutex which is locked
+ * on return of this function, by synched_thread_wait_queue_unlock().
+ */
 void
 synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
 					synched_thread_wait_queue_cond_fn cond_fn,
@@ -385,6 +389,11 @@ synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
 	wq->thread_wait_count--;
 	should_block = cond_fn(arg, NULL); /* non-locking mode */
     }
+}
+
+void
+synched_thread_wait_queue_unlock(synched_thread_wait_queue *wq){
+    pthread_mutex_unlock(wq->app_mutex);
 }
 
 /*
