@@ -10,6 +10,8 @@
 #define THREADS_NO 8
 #define BUF_SIZE 16
 
+static uintptr_t vehicle_no = 1;
+
 static int
 mystrtoi(char *str, bool *success){
     long result;
@@ -68,6 +70,8 @@ static void
 handle_user_input(traffic_intersection_map *imap){
     int val;
     traffic_light_color *c;
+    vehicle *new_vehicle;
+    direction new_vehicle_direction;
 
     while(1){
 	printf("Choose one of the numbers :\n"
@@ -78,7 +82,7 @@ handle_user_input(traffic_intersection_map *imap){
 
 	switch(val){
 	    case 1:
-		printf("OK, choose one of the numbers :\n"
+		printf("Input one of the numbers :\n"
 		       "Change the vertical traffic light to RED(0), YELLOW(1) or GREEN(2) or\n"
 		       "Change the horizontal traffic light to RED(3), YELLOW(4) or GREEN(5)\n");
 		val = get_integer_within_range(">>> ", 0, 5);
@@ -95,8 +99,14 @@ handle_user_input(traffic_intersection_map *imap){
 
 		break;
 	    case 2:
-		// v = create_vehicle(,);
-		// place_moving_vehicle_on_map(imap, v);
+		printf("Input one of the direction where the vehicle starts to move :\n"
+		       "NORTH(0), EAST(1), SOUTH(2) and WEST(3)\n");
+		new_vehicle_direction = get_integer_within_range(">>> ", 0, 3);
+		new_vehicle = create_vehicle(vehicle_no++, new_vehicle_direction);
+		place_moving_vehicle_on_map(imap, new_vehicle);
+
+		sleep(1);
+
 		break;
 	    case 3:
 		print_intersection_map(imap);
@@ -115,7 +125,7 @@ main(int argc, char *argv[]){
 
     imap = create_intersection_map();
     for (i = 1; i <= THREADS_NO; i++){
-	v = create_vehicle(i, i % 4);
+	v = create_vehicle(vehicle_no++, i % 4);
 	place_moving_vehicle_on_map(imap, v);
     }
 
