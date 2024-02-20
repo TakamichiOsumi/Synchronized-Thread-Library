@@ -138,6 +138,15 @@ let_vehicle_move(void *arg){
     imap = v->imap;
 
     printf("vehicle (id = %lu) has been set\n", v->vehicle_no);
+    if (v->pos.y == 1){
+	/* moving vertically */
+	;
+    }else if(v->pos.x == 1){
+	/* moving horizontally */
+	;
+    }else{
+	assert(0);
+    }
 
     return NULL;
 }

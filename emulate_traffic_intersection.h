@@ -6,7 +6,8 @@
 #include "Linked-List/linked_list.h"
 
 /*
- * Emulate a simplified intersection to demonstrate wait queue functionality.
+ * Emulate a simplified intersection to demonstrate wait queue feature.
+ *
  * There is one traffic light and some vehicles (threads) only.
  */
 typedef enum direction {
