@@ -32,6 +32,10 @@ typedef struct vehicle {
     direction to;
     position pos;
     pthread_t handler;
+    /*
+     * Reference to the traffic intersection map to react
+     * to the traffic light.
+     */
     struct traffic_intersection_map *imap;
 } vehicle;
 
@@ -41,6 +45,7 @@ typedef struct traffic_intersection_map {
     traffic_light_color horizontal_direction;
     traffic_light_color vertical_direction;
     linked_list *vehicles;
+    pthread_mutex_t mutex;
 } traffic_intersection_map;
 
 void *vmalloc(size_t size);

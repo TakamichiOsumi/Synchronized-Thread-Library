@@ -13,6 +13,7 @@
 static int
 mystrtoi(char *str, bool *success){
     long result;
+
     errno = 0;
     *success = false;
 
@@ -68,15 +69,46 @@ handle_user_input(traffic_intersection_map *imap){
     int val;
 
     while(1){
-	printf("Choose one of the numbers : \n"
-	       "[1] Change the traffic light\n"
+	printf("Choose one of the numbers :\n"
+	       "[1] Change the color of the traffic light\n"
 	       "[2] Add a new vehicle into the map\n"
 	       "[3] Print traffic intersection\n");
 	val = get_integer_within_range(">>> ", 1, 3);
 
-	printf("Got %d\n", val);
 	switch(val){
 	    case 1:
+		printf("\tChoose one of the numbers :\n"
+		       "\t[1] Turn the vertical traffic light to RED\n"
+		       "\t[2] Turn the vertical traffic light to YELLOW\n"
+		       "\t[3] Turn the vertical traffic light to GREEN\n"
+		       "\t[4] Turn the horizontal traffic light to RED\n"
+		       "\t[5] Turn the horizontal traffic light to YELLOW\n"
+		       "\t[6] Turn the horizontal traffic light to GREEN\n");
+		val = get_integer_within_range("\t>>> ", 1, 6);
+		switch(val){
+		    case 1:
+			imap->vertical_direction = RED;
+			break;
+		    case 2:
+			imap->vertical_direction = YELLOW;
+			break;
+		    case 3:
+			imap->vertical_direction = GREEN;
+			break;
+		    case 4:
+			imap->horizontal_direction = RED;
+			break;
+		    case 5:
+			imap->horizontal_direction = YELLOW;
+			break;
+		    case 6:
+			imap->horizontal_direction = GREEN;
+			break;
+		    default:
+			break;
+		}
+		synched_thread_wait_queue_signal(imap->wq, false, true);
+		sleep(2);
 		break;
 	    case 2:
 		break;

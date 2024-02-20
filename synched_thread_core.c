@@ -376,7 +376,7 @@ synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
     bool should_block;
     pthread_mutex_t *locked_app_mutex = NULL;
 
-    should_block = cond_fn(arg, locked_app_mutex); /* locking mode */
+    should_block = cond_fn(arg, &locked_app_mutex); /* locking mode */
     wq->app_mutex = locked_app_mutex;
 
     while(should_block){

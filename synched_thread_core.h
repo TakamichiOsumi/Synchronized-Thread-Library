@@ -108,6 +108,10 @@ void synched_thread_set_thread_attribute(synched_thread *sync_thread,
 void synched_thread_run(synched_thread *sync_thread,
 			void *(*thread_fn)(void *), void *arg);
 /*
+ * Support thread pause and resumption feature
+ */
+
+/*
  * Only mark the flag to pause.
  *
  * The pause operation will be done in the next pause point where
@@ -134,7 +138,7 @@ void synched_thread_set_resume_fn(synched_thread *sync_thread,
 				  void *resume_arg);
 
 /*
- * Support thread pool functionality
+ * Support thread pool feature
  */
 synched_thread_pool *synched_thread_pool_init(uintptr_t max_threads_num);
 void synched_thread_insert_thread_into_pool(synched_thread_pool *sth_pool,
@@ -146,17 +150,17 @@ void synched_thread_dispatch_thread(synched_thread_pool *sth_pool,
 				    void *arg);
 
 /*
- * Support thread barrier functionality
+ * Support thread barrier feature
  */
 synched_thread_barrier *synched_thread_barrier_init(uint32_t threshold);
 void synched_thread_barrier_wait(synched_thread_barrier *synched_barrier);
 void synched_thread_barrier_destroy(synched_thread_barrier *synched_barrier);
 
 /*
- * Support wait queue functionality
+ * Support wait queue feature
  */
 typedef bool (*synched_thread_wait_queue_cond_fn)(void *app_arg,
-						  pthread_mutex_t *out_mutex);
+						  pthread_mutex_t **out_mutex);
 synched_thread_wait_queue *synched_thread_wait_queue_init(void);
 void synched_thread_wait_queue_test_and_wait(synched_thread_wait_queue *wq,
 					     synched_thread_wait_queue_cond_fn cond_fn,
