@@ -48,6 +48,8 @@ typedef struct traffic_intersection_map {
     pthread_mutex_t mutex;
 } traffic_intersection_map;
 
+void test_vehicles_number_in_map(traffic_intersection_map *imap,
+				 int expected_len);
 void *vmalloc(size_t size);
 void print_vehicle(vehicle *v);
 void print_intersection_map(traffic_intersection_map *imap);

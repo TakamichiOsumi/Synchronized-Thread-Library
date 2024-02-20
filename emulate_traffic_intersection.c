@@ -7,6 +7,19 @@
 #define IS_MOVING_VERTICALLY(vehicle) (vehicle->pos.x == 1)
 #define IS_MOVING_HORIZONTALLY(vehicle) (vehicle->pos.y == 1)
 
+void
+test_vehicles_number_in_map(traffic_intersection_map *imap, int expected_len){
+    int n = ll_get_length(imap->vehicles);
+
+    if (n != expected_len){
+	fprintf(stderr, "NG : expected the length of list to be %d, but it was %d\n",
+		expected_len, n);
+	exit(-1);
+    }else{
+	fprintf(stderr, "OK : the number of vehicles is same as expectation\n");
+    }
+}
+
 void *
 vmalloc(size_t size){
     void *p;

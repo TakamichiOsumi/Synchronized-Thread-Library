@@ -12,109 +12,52 @@
 
 static uintptr_t vehicle_no = 1;
 
-static int
-mystrtoi(char *str, bool *success){
-    long result;
+void
+basic_wq_test(traffic_intersection_map *imap){
+    /* Check the number of vehicles is same as that of threads */
+    test_vehicles_number_in_map(imap, THREADS_NO);
 
-    errno = 0;
-    *success = false;
+    /* Allow four vehicles to pass the traffic intersection */
+    imap->vertical_direction = GREEN;
+    synched_thread_wait_queue_signal(imap->wq, true, true);
+    /* Wait for the vehicles leave */
+    sleep(3);
+    test_vehicles_number_in_map(imap, 4);
 
-    result = strtol(str, NULL, 10);
-    if(errno != 0){
-	return 0;
-    }else if (result == LONG_MIN || result == LONG_MAX){
-	return 0;
-    }else if (result <= INT_MIN || result >= INT_MAX){
-	return 0;
-    }
-
-    *success = true;
-
-    return (int) result;
+    /* Allow four left vehicles to pass the traffic intersection */
+    synched_thread_wait_queue_signal(imap->wq, true, true);
+    imap->horizontal_direction = GREEN;
+    /* Wait for the vehicles leave */
+    sleep(3);
+    test_vehicles_number_in_map(imap, 0);
 }
 
-static int
-get_integer_within_range(char *description,
-			 int lower_limit, int upper_limit){
-    char buf[BUF_SIZE];
-    bool success = false;
-    int val = -1;
+void
+dynamic_wq_test(traffic_intersection_map *imap){
+    vehicle *v1, *v2;
 
-    do {
-	/* Show the prompt for user */
-	printf("%s", description);
+    test_vehicles_number_in_map(imap, 0);
 
-	fgets(buf, sizeof(buf), stdin);
-	buf[sizeof(buf) - 1] = '\0';
+    imap->horizontal_direction = GREEN;
+    imap->vertical_direction = RED;
 
-	val = mystrtoi(buf, &success);
+    /* A new vehicle v1 can pass the intersection with green traffic light */
+    v1 = create_vehicle(vehicle_no++, EAST);
+    place_moving_vehicle_on_map(imap, v1);
+    sleep(2);
+    test_vehicles_number_in_map(imap, 0);
 
-	if (success == false ||
-	    (val < lower_limit || upper_limit < val)){
-
-	    fprintf(stderr, "invalid input value. try again\n");
-	    /*
-	     * This 'success' flag can be true, if the input gets
-	     * converted to integer in nfc_strtol(). In this case,
-	     * reset the flag and let the user input something else.
-	     */
-	    success = false;
-	}
-
-    }while(!success);
-
-    return val;
-}
-
-static void
-handle_user_input(traffic_intersection_map *imap){
-    int val;
-    traffic_light_color *c;
-    vehicle *new_vehicle;
-    direction new_vehicle_direction;
-
-    while(1){
-	printf("Choose one of the numbers :\n"
-	       "[1] Change the color of the traffic light\n"
-	       "[2] Add a new vehicle into the map\n"
-	       "[3] Print traffic intersection\n");
-	val = get_integer_within_range(">>> ", 1, 3);
-
-	switch(val){
-	    case 1:
-		printf("Input one of the numbers :\n"
-		       "Change the vertical traffic light to RED(0), YELLOW(1) or GREEN(2) or\n"
-		       "Change the horizontal traffic light to RED(3), YELLOW(4) or GREEN(5)\n");
-		val = get_integer_within_range(">>> ", 0, 5);
-
-		if (val <= 2)
-		    c = &imap->vertical_direction;
-		else
-		    c = &imap->horizontal_direction;
-		*c = val % 3;
-
-		synched_thread_wait_queue_signal(imap->wq, true, true);
-
-		sleep(1);
-
-		break;
-	    case 2:
-		printf("Input one of the direction where the vehicle starts to move :\n"
-		       "NORTH(0), EAST(1), SOUTH(2) and WEST(3)\n");
-		new_vehicle_direction = get_integer_within_range(">>> ", 0, 3);
-		new_vehicle = create_vehicle(vehicle_no++, new_vehicle_direction);
-		place_moving_vehicle_on_map(imap, new_vehicle);
-
-		sleep(1);
-
-		break;
-	    case 3:
-		print_intersection_map(imap);
-		break;
-	    default:
-		break;
-	}
-    }
+    /* A new vehicle v2 gets blocked the intersection with red/yellow traffic light */
+    v2 = create_vehicle(vehicle_no++, NORTH);
+    place_moving_vehicle_on_map(imap, v2);
+    sleep(2);
+    /* The v2 vehicle should be blocked */
+    test_vehicles_number_in_map(imap, 1);
+    imap->vertical_direction = GREEN;
+    synched_thread_wait_queue_signal(imap->wq, true, true);
+    sleep(2);
+    /* The v2 vehicle should be released by the color change and the signal */
+    test_vehicles_number_in_map(imap, 0);
 }
 
 int
@@ -124,17 +67,19 @@ main(int argc, char *argv[]){
     int i;
 
     imap = create_intersection_map();
+
+    /*
+     * Create four vertically moving vehicles and
+     * four horizontally moving vehicles each.
+     */
     for (i = 1; i <= THREADS_NO; i++){
 	v = create_vehicle(vehicle_no++, i % 4);
 	place_moving_vehicle_on_map(imap, v);
     }
 
-    assert(ll_get_length(imap->vehicles) == THREADS_NO);
+    basic_wq_test(imap);
 
-    /* Wait for the startup of all the threads */
-    sleep(1);
-
-    handle_user_input(imap);
+    dynamic_wq_test(imap);
 
     pthread_exit(0);
 
