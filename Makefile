@@ -47,8 +47,8 @@ clean: synched_thread_core.o
 
 test: $(TEST_SETS)
 	@echo "Will execute the thread synchronization basic tests."
-	@./$(BASIC_OPERATION_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
+	@./$(BASIC_OPERATION_TEST) &> /dev/null && echo "Successful when the value is zero >>> $$?"
 	@echo "Will execute the thread barrier tests."
-	@./$(THREAD_BARRIER_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
+	@./$(THREAD_BARRIER_TEST) &> /dev/null && echo "Successful when the value is zero >>> $$?"
 	@echo "Will execute the wait queue tests."
-	@./$(WAIT_QUEUE_TEST) &> /dev/null && echo "Successful when the return value is zero >>> $$?"
+	@./$(WAIT_QUEUE_TEST) &> /dev/null && echo "Successful when the value is zero >>> $$?"
