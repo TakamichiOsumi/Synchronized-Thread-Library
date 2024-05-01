@@ -1,6 +1,6 @@
-# Synchronized Thread Library (WIP)
+# Synchronized Thread Library (Work in progress)
 
-Extend POSIX thread library to enable user to enjoy below thread synchronization features:
+Evolve POSIX thread library to enable user to enjoy below thread synchronization features:
 
 * Thread Pause and Resumption
   * Make some thread pause or resume from other thread by indicating pause point safely.
@@ -9,13 +9,13 @@ Extend POSIX thread library to enable user to enjoy below thread synchronization
   * Pool ready-to-use threads in the background and deploy those to process user defined functions flexibly.
 
 * Thread Barrier
-  * Make threads wait at specific point of code until the number of threads equal to the defined threshold reach the point.
+  * Make threads wait at specific point of code until the number of threads equal to the defined threshold reaches the point.
 
 * Thread Wait Queues
   * Block threads until some user defined condition is satisfied but at the same time encapsulate internal blocking mechanism from user application.
     * Relieve the pains of developer to declare and maintain pthread mutex or condition variables by hiding thread synchronization complexity.
 
-* Thread Monitors
+* Thread Monitors (TODO)
   * Set the upper limit of reader/writer threads to be allowed to run in the critical section.
   * Allow multiple writer threads to operate in the critical section.
   * Specify the type of thread that enters the critical section next to be a different type of thead.
