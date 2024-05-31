@@ -2,8 +2,8 @@
 #define __TRAFFIC_INTERSECTION__
 
 #include "stdint.h"
-#include "synched_thread_core.h"
-#include "Linked-List/linked_list.h"
+#include "../synched_thread_core.h"
+#include "../Linked-List/linked_list.h"
 
 /*
  * Emulate a simplified intersection to demonstrate wait queue feature.

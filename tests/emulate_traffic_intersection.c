@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "emulate_traffic_intersection.h"
-#include "Linked-List/linked_list.h"
+#include "../Linked-List/linked_list.h"
 
 #define IS_MOVING_VERTICALLY(vehicle) (vehicle->pos.x == 1)
 #define IS_MOVING_HORIZONTALLY(vehicle) (vehicle->pos.y == 1)

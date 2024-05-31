@@ -5,7 +5,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include "synched_thread_core.h"
+#include "../synched_thread_core.h"
 
 typedef enum { T1 = 0, T2 = 1 } thread_id;
 
