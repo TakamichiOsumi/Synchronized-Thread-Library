@@ -1,4 +1,4 @@
-# Synchronized Thread Library (Work in progress)
+# Synchronized Thread Library
 
 Evolve POSIX thread library to enable user to enjoy below thread synchronization features:
 
